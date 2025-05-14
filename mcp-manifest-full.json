@@ -1,0 +1,348 @@
+{
+  "tools": [
+    {
+      "name": "loginUser",
+      "description": "Authenticate a user using email and password to retrieve a token.",
+      "input_schema": {
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "store": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "getCountries",
+      "description": "Retrieve a list of supported countries for shipping.",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "output_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "countryId": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "code": {
+              "type": "string",
+              "nullable": true
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "phoneCountryCode": {
+              "type": "string",
+              "nullable": true
+            },
+            "active": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "name": "getShippingRates",
+      "description": "Get shipping rates between two addresses for one or more packages.",
+      "input_schema": {
+        "required": [
+          "packages",
+          "purposeCode",
+          "shopName",
+          "stage"
+        ],
+        "type": "object",
+        "properties": {
+          "shopName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StageRequest"
+          },
+          "purposeCode": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PackageRequest"
+            }
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GetShopRatesProviderFilterItem"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "trackPackage",
+      "description": "Get the latest location information for a package using its tracking number.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "trackingNumber": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "trackingNumber"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "scans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrackingEvent"
+            },
+            "nullable": true
+          },
+          "trackingNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "fromAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "toAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estimatedDelivery": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actualDelivery": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signer": {
+            "type": "string",
+            "nullable": true
+          },
+          "shipped": {
+            "type": "boolean"
+          },
+          "delivered": {
+            "type": "boolean"
+          },
+          "progressLevel": {
+            "type": "string",
+            "nullable": true
+          },
+          "altTrackingNumber": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "statusFlags": {
+            "$ref": "#/components/schemas/TrackingStatusFlags"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "createLabel",
+      "description": "Generate shipping label(s) for an order using its orderId.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "integer",
+            "description": "The ID of the order for which labels will be created."
+          }
+        },
+        "required": [
+          "orderId"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "labelResponse": {
+            "$ref": "#/components/schemas/AutoLabelResponse"
+          },
+          "errorResponse": {
+            "$ref": "#/components/schemas/ShipmentErrorResponse"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "getLabel",
+      "description": "Fetch a label PDF for a given tracking number and label type.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "trackingNumber": {
+            "type": "string",
+            "description": "Tracking number of the shipment."
+          },
+          "labelType": {
+            "type": "string",
+            "description": "Type of label to generate. Options: 'laser' or 'thermal'."
+          }
+        },
+        "required": [
+          "trackingNumber",
+          "labelType"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "labelContent": {
+            "type": "string",
+            "description": "Base64 or binary data representing the shipping label."
+          }
+        }
+      }
+    },
+    {
+      "name": "getShopOrders",
+      "description": "Retrieve a list of shop orders with filters like pagination and status.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderDirection": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "shopOrderStatus": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "includeDeleted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orderResponse": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserShipmentReport"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "createShopOrder",
+      "description": "Create a shop order from a request ID and rate signature.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "nullable": true
+          },
+          "rateSignature": {
+            "type": "string",
+            "nullable": true
+          },
+          "purchaseOrder": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "integer"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  ],
+  "models": [],
+  "contexts": [],
+  "instructions": []
+}
